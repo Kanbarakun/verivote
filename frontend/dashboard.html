@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VeriVote - Dashboard</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .dashboard-card { border-radius: 15px; padding: 40px; background: white; max-width: 600px; }
+        .btn-dash { border-radius: 10px; padding: 12px; font-weight: bold; width: 100%; margin-bottom: 10px; }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100">
+    <div class="dashboard-card shadow-sm text-center">
+        <h1 class="mb-2">Welcome, <span id="user-display">User</span>!</h1>
+        <h3 class="text-muted mb-4">Dashboard</h3>
+        
+        <p class="lead">Your voice matters. Participate in the future of our nation.</p>
+        
+        <div class="row mt-4">
+            <div class="col-6">
+                <a href="vote.html" class="btn btn-primary btn-dash">Cast Your Vote</a>
+                <button id="btn-logout" class="btn btn-outline-secondary btn-dash">Log Out</button>
+            </div>
+            <div class="col-6">
+                <a href="results.html" class="btn btn-secondary btn-dash">View Results</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Display Name from Login
+        document.getElementById('user-display').innerText = localStorage.getItem('userName') || 'Voter';
+
+        // Logout Logic
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
