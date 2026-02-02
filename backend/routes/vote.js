@@ -1,49 +1,24 @@
-const express = require("express");
-const auth = require("../middleware/authMiddleware");
-const { readJSON, writeJSON } = require("../utils/fileHandler");
-const { v4: uuidv4 } = require("uuid");
-
+const express = require('express');
 const router = express.Router();
+const fileHandler = require('../utils/filehandler');
 
-const USERS_FILE = "users.json";
-const VOTES_FILE = "votes.json";
+// Record a vote
+router.post('/cast', (req, res) => {
+    const { userId, category, candidateId } = req.body;
+    const votes = fileHandler.read('votes.json');
 
-// CAST VOTE
-router.post("/", auth, (req, res) => {
-  const { electionId, candidateId } = req.body;
+    // Simple vote recording
+    const newVote = {
+        userId,
+        category,
+        candidateId,
+        timestamp: new Date().toISOString()
+    };
 
-  if (!electionId || !candidateId) {
-    return res.status(400).json({ error: "Missing vote data" });
-  }
+    votes.push(newVote);
+    fileHandler.write('votes.json', votes);
 
-  const users = readJSON(USERS_FILE);
-  const votes = readJSON(VOTES_FILE);
-
-  const userIndex = users.findIndex(u => u.id === req.user.id);
-  if (userIndex === -1) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  // 🚫 One-person-one-vote check
-  if (users[userIndex].hasVoted) {
-    return res.status(403).json({ error: "You already voted" });
-  }
-
-  // Save vote
-  votes.push({
-    id: uuidv4(),
-    voterId: req.user.id,
-    electionId,
-    candidateId,
-    timestamp: new Date().toISOString()
-  });
-
-  users[userIndex].hasVoted = true;
-
-  writeJSON(VOTES_FILE, votes);
-  writeJSON(USERS_FILE, users);
-
-  res.json({ message: "Vote successfully cast" });
+    res.json({ success: true, message: "Vote cast successfully!" });
 });
 
 module.exports = router;

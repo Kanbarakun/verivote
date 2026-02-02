@@ -1,62 +1,39 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
-const { readJSON, writeJSON } = require("../utils/filehandler");
-
+const express = require('express');
 const router = express.Router();
-const USERS_FILE = "users.json";
-const SECRET = "verivote_secret"; // later move to .env
+const fileHandler = require('../utils/filehandler');
 
-// REGISTER
-router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
+// Registration Endpoint
+router.post('/register', (req, res) => {
+    const { name, email, password } = req.body;
+    const users = fileHandler.read('users.json');
 
-  if (!name || !email || !password)
-    return res.status(400).json({ error: "All fields required" });
+    // Check if user already exists
+    const existingUser = users.find(u => u.email === email);
+    if (existingUser) {
+        return res.status(400).json({ success: false, message: "User already exists!" });
+    }
+    
+    // Login Endpoint
+router.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    const users = fileHandler.read('users.json');
 
-  const users = readJSON(USERS_FILE);
+    // Find the user by email
+    const user = users.find(u => u.email === email && u.password === password);
 
-  const exists = users.find(u => u.email === email);
-  if (exists)
-    return res.status(409).json({ error: "Email already registered" });
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  users.push({
-    id: uuidv4(),
-    name,
-    email,
-    password: hashedPassword,
-    hasVoted: false,
-    role: "voter"
-  });
-
-  writeJSON(USERS_FILE, users);
-  res.json({ message: "Registration successful" });
+    if (user) {
+        res.json({ success: true, message: "Login successful!", user: { name: user.name } });
+    } else {
+        res.status(401).json({ success: false, message: "Invalid email or password." });
+    }
 });
 
-// LOGIN
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+    // Add new user
+    const newUser = { id: Date.now(), name, email, password };
+    users.push(newUser);
+    fileHandler.write('users.json', users);
 
-  const users = readJSON(USERS_FILE);
-  const user = users.find(u => u.email === email);
-
-  if (!user)
-    return res.status(401).json({ error: "Invalid credentials" });
-
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid)
-    return res.status(401).json({ error: "Invalid credentials" });
-
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    SECRET,
-    { expiresIn: "2h" }
-  );
-
-  res.json({ token });
+    res.json({ success: true, message: "Registration successful!" });
 });
 
 module.exports = router;
