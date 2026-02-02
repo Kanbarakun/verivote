@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const fileHandler = require('../utils/filehandler.js');
+const fileHandler = require('../utils/fileHandler');
 
 // Registration Endpoint
 router.post('/register', (req, res) => {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const fileHandler = require('../utils/filehandler');
+const fileHandler = require('../utils/fileHandler');
 
 // Record a vote
 router.post('/cast', (req, res) => {
