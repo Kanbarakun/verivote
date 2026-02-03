@@ -8,7 +8,7 @@ router.post('/register', async (req, res) => { // Added 'async'
         const { name, email, password } = req.body;
 
         // Use 'await' because fileHandler.read() now fetches from the cloud
-        const users = await fileHandler.read();
+        const users = await fileHandler.read('users');
 
         // Check if user already exists
         if (users.find(u => u.email === email)) {
@@ -20,7 +20,7 @@ router.post('/register', async (req, res) => { // Added 'async'
         users.push(newUser);
 
         // Use 'await' to ensure data is saved to JSONBin before sending response
-        const saved = await fileHandler.write(users);
+        const saved = await fileHandler.write('users', users);
 
         if (saved) {
             res.json({ success: true, message: "Registration successful!" });
@@ -39,7 +39,7 @@ router.post('/login', async (req, res) => { // Added 'async'
         const { email, password } = req.body;
 
         // Use 'await' to get the latest user list from JSONBin
-        const users = await fileHandler.read();
+        const users = await fileHandler.read('users');
 
         const user = users.find(u => u.email === email && u.password === password);
 
