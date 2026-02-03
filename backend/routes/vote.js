@@ -34,7 +34,7 @@ router.get('/results', async (req, res) => {
     res.json({ success: true, results: summary });
 });
 
-rrouter.post('/submit', async (req, res) => {
+router.post('/submit', async (req, res) => {
     const { voterEmail, candidateId } = req.body;
 
     const users = await fileHandler.read('users');
@@ -44,7 +44,7 @@ rrouter.post('/submit', async (req, res) => {
     const user = users.find(u => u.email === voterEmail);
     if (!user || user.hasVoted) {
         return res.status(403).json({ success: false, message: "Unauthorized or already voted." });
-    }
+    }   
 
     // 2. Cast Vote
     votes.push({ candidateId, timestamp: new Date() });
