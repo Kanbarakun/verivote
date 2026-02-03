@@ -1,28 +1,32 @@
 const axios = require('axios');
 require('dotenv').config();
 
-const BIN_ID = process.env.JSONBIN_BIN_ID;
 const API_KEY = process.env.JSONBIN_API_KEY;
-const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+// Map your data types to their specific Bin IDs from JSONBin.io
+const BINS = {
+    users: process.env.BIN_ID_USERS,
+    candidates: process.env.BIN_ID_CANDIDATES,
+    elections: process.env.BIN_ID_ELECTIONS,
+    votes: process.env.BIN_ID_VOTES
+};
 
 const fileHandler = {
-    // Read from Cloud
-    read: async () => {
+    read: async (type) => {
         try {
-            const response = await axios.get(`${BASE_URL}/latest`, {
+            const response = await axios.get(`https://api.jsonbin.io/v3/b/${BINS[type]}/latest`, {
                 headers: { 'X-Master-Key': API_KEY }
             });
             return response.data.record;
         } catch (err) {
-            console.error("Cloud Read Error:", err.response ? err.response.data : err.message);
+            console.error(`Cloud Read Error (${type}):`, err.message);
             return [];
         }
     },
 
-    // Write to Cloud
-    write: async (data) => {
+    write: async (type, data) => {
         try {
-            await axios.put(BASE_URL, data, {
+            await axios.put(`https://api.jsonbin.io/v3/b/${BINS[type]}`, data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': API_KEY
@@ -30,7 +34,7 @@ const fileHandler = {
             });
             return true;
         } catch (err) {
-            console.error("Cloud Write Error:", err.response ? err.response.data : err.message);
+            console.error(`Cloud Write Error (${type}):`, err.message);
             return false;
         }
     }
