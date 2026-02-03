@@ -1,26 +1,36 @@
-const fs = require('fs');
-const path = require('path');
+const axios = require('axios');
+require('dotenv').config();
+
+const BIN_ID = process.env.JSONBIN_BIN_ID;
+const API_KEY = process.env.JSONBIN_API_KEY;
+const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 const fileHandler = {
-    read: (filename) => {
-        // This ensures it always finds the 'data' folder relative to this file
-        const filePath = path.join(__dirname, '../data', filename);
+    // Read from Cloud
+    read: async () => {
         try {
-            if (!fs.existsSync(filePath)) return [];
-            const data = fs.readFileSync(filePath, 'utf8');
-            return JSON.parse(data || '[]');
+            const response = await axios.get(`${BASE_URL}/latest`, {
+                headers: { 'X-Master-Key': API_KEY }
+            });
+            return response.data.record;
         } catch (err) {
-            console.error(`Error reading ${filename}:`, err);
+            console.error("Cloud Read Error:", err.response ? err.response.data : err.message);
             return [];
         }
     },
-    write: (filename, data) => {
-        const filePath = path.join(__dirname, '../data', filename);
+
+    // Write to Cloud
+    write: async (data) => {
         try {
-            fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+            await axios.put(BASE_URL, data, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                }
+            });
             return true;
         } catch (err) {
-            console.error(`Error writing ${filename}:`, err);
+            console.error("Cloud Write Error:", err.response ? err.response.data : err.message);
             return false;
         }
     }

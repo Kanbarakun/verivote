@@ -1,39 +1,61 @@
-const express = require('express');
+const express = require ('express');
 const router = express.Router();
 const fileHandler = require('../utils/fileHandler');
 
-// Registration Endpoint
-router.post('/register', (req, res) => {
-    const { name, email, password } = req.body;
-    const users = fileHandler.read('users.json');
+// --- REGISTRATION ---
+router.post('/register', async (req, res) => { // Added 'async'
+    try {
+        const { name, email, password } = req.body;
 
-    // Check if user already exists
-    const existingUser = users.find(u => u.email === email);
-    if (existingUser) {
-        return res.status(400).json({ success: false, message: "User already exists!" });
-    }
-    
-    // Login Endpoint
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
-    const users = fileHandler.read('users.json');
+        // Use 'await' because fileHandler.read() now fetches from the cloud
+        const users = await fileHandler.read();
 
-    // Find the user by email
-    const user = users.find(u => u.email === email && u.password === password);
+        // Check if user already exists
+        if (users.find(u => u.email === email)) {
+            return res.status(400).json({ success: false, message: "User already exists" });
+        }
 
-    if (user) {
-        res.json({ success: true, message: "Login successful!", user: { name: user.name } });
-    } else {
-        res.status(401).json({ success: false, message: "Invalid email or password." });
+        // Add new user
+        const newUser = { name, email, password };
+        users.push(newUser);
+
+        // Use 'await' to ensure data is saved to JSONBin before sending response
+        const saved = await fileHandler.write(users);
+
+        if (saved) {
+            res.json({ success: true, message: "Registration successful!" });
+        } else {
+            res.status(500).json({ success: false, message: "Failed to save to cloud" });
+        }
+    } catch (error) {
+        console.error("Register Error:", error);
+        res.status(500).json({ success: false, message: "Server error during registration" });
     }
 });
 
-    // Add new user
-    const newUser = { id: Date.now(), name, email, password };
-    users.push(newUser);
-    fileHandler.write('users.json', users);
+// --- LOGIN ---
+router.post('/login', async (req, res) => { // Added 'async'
+    try {
+        const { email, password } = req.body;
 
-    res.json({ success: true, message: "Registration successful!" });
+        // Use 'await' to get the latest user list from JSONBin
+        const users = await fileHandler.read();
+
+        const user = users.find(u => u.email === email && u.password === password);
+
+        if (user) {
+            // Return success and the user's name for the dashboard
+            res.json({ 
+                success: true, 
+                user: { name: user.name, email: user.email } 
+            });
+        } else {
+            res.status(401).json({ success: false, message: "Invalid email or password" });
+        }
+    } catch (error) {
+        console.error("Login Error:", error);
+        res.status(500).json({ success: false, message: "Server error during login" });
+    }
 });
 
 module.exports = router;
