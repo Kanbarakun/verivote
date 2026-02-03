@@ -21,4 +21,16 @@ router.post('/cast', (req, res) => {
     res.json({ success: true, message: "Vote cast successfully!" });
 });
 
+router.get('/results', async (req, res) => {
+    const votes = await fileHandler.read('votes');
+    const candidates = await fileHandler.read('candidates');
+
+    // Logic to count votes per candidate
+    const summary = candidates.map(c => {
+        const count = votes.filter(v => v.candidateId === c.id).length;
+        return { name: c.name, votes: count };
+    });
+
+    res.json({ success: true, results: summary });
+});
 module.exports = router;
